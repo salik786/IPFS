@@ -1,12 +1,12 @@
-# dependencies
-/node_modules
+# dependencies 
+/node_modules 
 
-/.idea
-./idea
-/.vscode
-./vscode
-/vscode
-/idea
-
-
-/src/routes/uploads/*
+/.idea 
+./idea 
+/.vscode 
+./vscode 
+/vscode 
+/idea 
+ 
+ 
+/src/routes/uploads/* 

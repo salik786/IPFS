@@ -1,5 +1,6 @@
-const ipfsAPI = require('ipfs-api');
+
 const multer = require('multer');
+const ipfsClient = require("ipfs-http-client")
 const path = require('path');
 const fs = require('fs');
 
@@ -18,15 +19,27 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({ storage });
+const projectId = '2IxG61IZGKcMXQxMv3anLwsByja';   // <---------- your Infura Project ID
 
-const ipfs = ipfsAPI({
-  host: '127.0.0.1',
+const projectSecret = '7cb4ffdec80fa3b5fbeef6480485f064';  // <---------- your Infura Secret
+// (for security concerns, consider saving these values in .env files)
+
+const auth = 'Basic ' + Buffer.from(projectId + ':' + projectSecret).toString('base64');
+
+const ipfs = ipfsClient.create({
+  host: 'ipfs.infura.io',
   port: 5001,
-  protocol: 'http'
-});
+  protocol: 'https',
+  headers: {
+      authorization: auth,
+  },
+})
+
 
 /*  upload POST endpoint */
-router.post('/', upload.single('file'), (req, res) => {
+router.post('/', upload.single('file'),async  (req, res) => {
+  console.log( "filee",req.file)
+
   if (!req.file) {
     return res.status(422).json({
       error: 'File needs to be provided.',
@@ -34,36 +47,31 @@ router.post('/', upload.single('file'), (req, res) => {
   }
 
   const mime = req.file.mimetype;
-  if (mime.split('/')[0] !== 'image') {
-    fs.unlink(req.file.path);
+  // if (mime.split('/')[0] !== 'image') {
+  //   fs.unlink(req.file.path,(err)=>{
+  //     c
+  //   }); 
 
-    return res.status(422).json({
-      error: 'File needs to be an image.',
-    });
-  }
+  //   return res.status(422).json({ 
+  //     error: 'File needs to be an image.' ,
+  //   }); 
+  // }
 
-  const fileSize = req.file.size;
-  if (fileSize > MAX_SIZE) {
-    fs.unlink(req.file.path);
+  // const fileSize = req.file.size ;
+  // if (fileSize > MAX_SIZE) { 
+  //   fs.unlink(req.file.path,callback) ;
 
-    return res.status(422).json({
-      error: `Image needs to be smaller than ${MAX_SIZE} bytes.`,
-    });
-  }
-
-  const data = fs.readFileSync(req.file.path);
-  return ipfs.add(data, (err, files) => {
-    fs.unlink(req.file.path);
-    if (files) {
-      return res.json({
-        hash: files[0].hash,
-      });
-    }
-
-    return res.status(500).json({
-      error: err,
-    });
+  //   return res.status(422).json({ 
+  //     error: `Image needs to be smaller than ${MAX_SIZE} bytes.` ,
+  //   }); 
+  // }
+  const data = fs.readFileSync(req.file.path); 
+  const uploadResult = await ipfs.add(data)
+  console.log("uploadResult",uploadResult) 
+  return res.json({ 
+    hash: uploadResult ,
   });
+  
 });
 
 /*  upload GET endpoint. */
